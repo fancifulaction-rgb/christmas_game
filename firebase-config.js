@@ -25,25 +25,14 @@
 // 4. Вставьте ваши данные ниже:
 
 const firebaseConfig = {
-  // ЗАМЕНИТЕ ЭТИ ЗНАЧЕНИЯ НА СВОИ!
-  apiKey: "YOUR_API_KEY_HERE",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDYwGvVTXng1tuZ0ANT9Lngwboi32LCUxM",
+  authDomain: "christmas-game-b1913.firebaseapp.com",
+  databaseURL: "https://christmas-game-b1913-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "christmas-game-b1913",
+  storageBucket: "christmas-game-b1913.firebasestorage.app",
+  messagingSenderId: "715177004399",
+  appId: "1:715177004399:web:b57c4300ab07e8a7512c9a"
 };
-
-// ❗ ВАЖНО: После настройки Firebase удалите этот блок проверки:
-if (firebaseConfig.apiKey === "YOUR_API_KEY_HERE") {
-  console.warn(
-    "⚠️ Firebase не настроен! \n\n" +
-    "Следуйте инструкциям в файле firebase-config.js для настройки облачного хранилища.\n\n" +
-    "Сейчас приложение работает в ЛОКАЛЬНОМ режиме (localStorage).\n\n" +
-    "Данные НЕ будут синхронизироваться между устройствами."
-  );
-}
 
 // Экспорт конфигурации
 window.FIREBASE_CONFIG = firebaseConfig;
