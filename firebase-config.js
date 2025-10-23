@@ -11,40 +11,16 @@
 // 2. Добавьте Web App и скопируйте конфигурацию:
 // 3. Замените все YOUR_... на реальные данные ниже:
 
-const FIREBASE_CONFIG = {
-    // 🔑 Замените на ваш API ключ
-    apiKey: "YOUR_API_KEY_HERE",
-    
-    // 🌐 Замените на ваш домен
-    authDomain: "your-project-id.firebaseapp.com",
-    
-    // 🗄️ Замените на ваш URL базы данных
-    databaseURL: "https://your-project-id-default-rtdb.firebaseio.com",
-    
-    // 🏷️ Замените на ваш Project ID
-    projectId: "your-project-id",
-    
-    // 📦 Замените на ваш Storage bucket
-    storageBucket: "your-project-id.appspot.com",
-    
-    // 📧 Замените на ваш Sender ID
-    messagingSenderId: "123456789",
-    
-    // 📱 Замените на ваш App ID
-    appId: "1:123456789:web:abcdef123456"
+const firebaseConfig = {
+  apiKey: "AIzaSyDVAchLp0xaAqF79A3R36EhrcN_nKDTdyg",
+  authDomain: "christmas-game-2025.firebaseapp.com",
+  databaseURL: "https://christmas-game-2025-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "christmas-game-2025",
+  storageBucket: "christmas-game-2025.firebasestorage.app",
+  messagingSenderId: "853797406884",
+  appId: "1:853797406884:web:28cdec8fca73946992be31"
 };
-
-// =====================================================
-// ⚠️ ПРОВЕРКА НАСТРОЙКИ:
-// =====================================================
-if (FIREBASE_CONFIG.apiKey === "YOUR_API_KEY_HERE") {
-    console.warn(
-        "🔥 FIREBASE НЕ НАСТРОЕН!\n\n" +
-        "📋 Следуйте инструкции в firebase-config.js\n" +
-        "🎮 Игра будет работать в ЛОКАЛЬНОМ режиме\n" +
-        "⚠️ Результаты НЕ будут синхронизироваться!"
-    );
-    
+ 
     // Режим для разработки/тестирования
     FIREBASE_CONFIG.enabled = false;
 } else {
