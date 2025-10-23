@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR-код для Новогодней игры</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .qr-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+        }
+
+        .qr-title {
+            color: #667eea;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .qr-code {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 3px solid #667eea;
+        }
+
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            background: #e9ecef;
+            border: 2px dashed #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #6c757d;
+            text-align: center;
+        }
+
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .game-link {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .qr-warning {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .qr-container {
+                padding: 20px;
+            }
+            
+            .qr-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="qr-container">
+        <h1 class="qr-title">🎄 QR-код для игры</h1>
+        
+        <div class="qr-warning">
+            ⚠️ Это демо-страница!<br>
+            Сгенерируйте настоящий QR-код через админ-панель
+        </div>
+
+        <div class="qr-code">
+            <div class="qr-placeholder">
+                Здесь будет<br>
+                настоящий<br>
+                QR-код
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>📱 Инструкция для игроков:</h3>
+            <ul>
+                <li>Откройте камеру на телефоне</li>
+                <li>Наведите на QR-код</li>
+                <li>Нажмите на уведомление</li>
+                <li>Введите название команды и капитана</li>
+                <li>Начните играть!</li>
+            </ul>
+        </div>
+
+        <div class="game-link">
+            Ссылка на игру:<br>
+            https://ваш-сайт.github.io/christmas-scavenger-hunt-v5-Production/index.html
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button class="btn" onclick="goToGame()">🚀 Начать игру</button>
+            <button class="btn" onclick="goToAdmin()">🔧 Админ-панель</button>
+        </div>
+    </div>
+
+    <script>
+        function goToGame() {
+            window.open('index.html', '_blank');
+        }
+
+        function goToAdmin() {
+            window.open('admin.html', '_blank');
+        }
+
+        // Добавляем эффект снежинок
+        function createSnowflakes() {
+            const snowflakeChars = ['❄', '❅', '❆'];
+            
+            for (let i = 0; i < 10; i++) {
+                const flake = document.createElement('div');
+                flake.innerHTML = snowflakeChars[Math.floor(Math.random() * snowflakeChars.length)];
+                flake.style.cssText = `
+                    position: fixed;
+                    top: -10px;
+                    color: white;
+                    font-size: 1em;
+                    opacity: 0.8;
+                    animation: fall linear infinite;
+                    left: ${Math.random() * 100}vw;
+                    animation-duration: ${Math.random() * 3 + 2}s;
+                    animation-delay: ${Math.random() * 2}s;
+                    z-index: 0;
+                `;
+                document.body.appendChild(flake);
+            }
+        }
+
+        // Добавляем CSS анимацию
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fall {
+                to {
+                    transform: translateY(100vh);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            createSnowflakes();
+        });
+    </script>
+</body>
+</html>
