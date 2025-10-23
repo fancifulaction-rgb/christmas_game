@@ -1,3 +1,14 @@
 {
-  "results": []
+  "results": [
+    {
+      "teamName": "22",
+      "captain": "22",
+      "score": 185,
+      "completedTasks": 3,
+      "totalTasks": 3,
+      "timeSpent": 13,
+      "timestamp": "2025-10-23T16:01:28.667Z",
+      "date": "23.10.2025, 19:01:28"
+    }
+  ]
 }
