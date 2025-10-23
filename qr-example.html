@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пример QR-кода для Новогодней Игры</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .qr-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+        }
+        
+        .qr-container h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .qr-code {
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            border: 5px solid #667eea;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+        
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .qr-placeholder {
+            color: #667eea;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .instructions {
+            margin-top: 30px;
+            text-align: left;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .instructions h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .note {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .url-display {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="qr-container">
+        <h1>🎄 Новогодняя Охота за Сокровищами</h1>
+        
+        <div class="qr-code" id="qrCode">
+            <div class="qr-placeholder">
+                <strong>QR-код будет здесь</strong><br><br>
+                1. Настройте Firebase<br>
+                2. Загрузите файлы на хостинг<br>
+                3. Откройте admin.html<br>
+                4. Нажмите "Создать QR-код"
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>📱 Инструкция для игроков:</h3>
+            <ol>
+                <li><strong>Откройте камеру</strong> на телефоне</li>
+                <li><strong>Наведите на QR-код</strong></li>
+                <li><strong>Нажмите на уведомление</strong> (если появится)</li>
+                <li><strong>Введите название команды</strong> и капитана</li>
+                <li><strong>Начните играть!</strong></li>
+            </ol>
+            
+            <div class="note">
+                <strong>💡 Совет:</strong> Убедитесь, что у игроков есть стабильное интернет-соединение для лучшего опыта игры.
+            </div>
+        </div>
+        
+        <div class="url-display" id="urlDisplay" style="display: none;">
+            URL игры: <span id="gameUrl"></span>
+        </div>
+    </div>
+
+    <script>
+        // Если вы настроили Firebase и загрузили файлы,
+        // раскомментируйте код ниже для автоматического создания QR-кода:
+        
+        /*
+        document.addEventListener('DOMContentLoaded', function() {
+            // Получаем URL игры
+            const gameUrl = window.location.href.replace('qr-example.html', 'index.html');
+            
+            // Создаем QR-код
+            const qrCodeDiv = document.getElementById('qrCode');
+            qrCodeDiv.innerHTML = `
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(gameUrl)}" 
+                     alt="QR-код игры" style="width: 100%; height: 100%; object-fit: contain;">
+            `;
+            
+            // Показываем URL
+            const urlDisplay = document.getElementById('urlDisplay');
+            const gameUrlSpan = document.getElementById('gameUrl');
+            urlDisplay.style.display = 'block';
+            gameUrlSpan.textContent = gameUrl;
+        });
+        */
+    </script>
+</body>
+</html>
