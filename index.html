@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Новогодняя Охота за Сокровищами 🎄</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Конфигурация игры -->
+    <script src="firebase-config.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: white;
+            font-size: 1em;
+            opacity: 0.8;
+            animation: fall linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* 🔥 ИНДИКАТОР СИНХРОНИЗАЦИИ */
+        .sync-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .sync-indicator.online {
+            background: #4CAF50;
+            box-shadow: 0 0 10px #4CAF50;
+        }
+
+        .sync-indicator.offline {
+            background: #f44336;
+            box-shadow: 0 0 10px #f44336;
+        }
+
+        .sync-indicator.syncing {
+            background: #FF9800;
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 10px #FF9800;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .sync-indicator::after {
+            content: attr(data-status);
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .sync-indicator:hover::after {
+            opacity: 1;
+        }
+
+        .login-page {
+            text-align: center;
+        }
+
+        .login-page input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .login-page input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .game-screen {
+            display: none;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-card.timer {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-card.score {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .stat-card.tasks {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .task-card {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .task-card .task-description {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .task-code {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .task-code input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 18px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .hint-section {
+            background: #fff8e1;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .hint-section h4 {
+            color: #e65100;
+            margin-bottom: 10px;
+        }
+
+        .hint-btn {
+            background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .hint-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .leaderboard {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .leaderboard h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .leaderboard-item.current-team {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+
+        .leaderboard-item .rank {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .leaderboard-item .team-name {
+            flex-grow: 1;
+            margin: 0 10px;
+        }
+
+        .leaderboard-item .score {
+            font-weight: bold;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .modal h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <!-- 🔥 ИНДИКАТОР СИНХРОНИЗАЦИИ -->
+    <div class="sync-indicator offline" id="syncIndicator" data-status="Локальный режим"></div>
+
+    <div class="container">
+        <!-- Логин -->
+        <div id="loginPage" class="login-page">
+            <div class="header">
+                <h1>🎄 Новогодняя Охота за Сокровищами</h1>
+                <div class="subtitle">Версия 4.0 - Автоматическая синхронизация</div>
+            </div>
+            
+            <div id="loginAlert" class="alert info">
+                <strong>📱 Автоматический режим:</strong><br>
+                Ваши результаты автоматически сохраняются и синхронизируются между устройствами!
+            </div>
+            
+            <input type="text" id="teamName" placeholder="Название команды" maxlength="20">
+            <input type="text" id="captainName" placeholder="Имя капитана" maxlength="20">
+            
+            <button class="btn" onclick="startGame()">🎮 Начать игру</button>
+        </div>
+
+        <!-- Игра -->
+        <div id="gameScreen" class="game-screen">
+            <div class="header">
+                <h1 id="gameTitle">Новогодняя Охота за Сокровищами</h1>
+                <div class="subtitle">
+                    Команда: <span id="currentTeamName"></span> | 
+                    Капитан: <span id="currentCaptainName"></span>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card timer">
+                    <div class="label">⏱️ Время</div>
+                    <div class="value" id="timerDisplay">00:00</div>
+                </div>
+                <div class="stat-card score">
+                    <div class="label">🏆 Очки</div>
+                    <div class="value" id="scoreDisplay">0</div>
+                </div>
+                <div class="stat-card tasks">
+                    <div class="label">📋 Задания</div>
+                    <div class="value" id="tasksDisplay">0/0</div>
+                </div>
+            </div>
+
+            <div id="taskContainer"></div>
+
+            <button class="btn" onclick="showLeaderboard()">📊 Рейтинг команд</button>
+        </div>
+
+        <!-- Рейтинг -->
+        <div id="leaderboardModal" class="modal">
+            <div class="modal-content">
+                <h2>🏆 Рейтинг команд</h2>
+                <div id="leaderboardList">Загрузка...</div>
+                <button class="btn" onclick="hideLeaderboard()" style="margin-top: 20px;">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 🔥 ИНИЦИАЛИЗАЦИЯ FIREBASE
+        let firebaseApp = null;
+        let firebaseDB = null;
+        let firebaseConnected = false;
+
+        // 📊 ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ИГРЫ
+        const GAME_CONFIG = {
+            version: '4.0.0',
+            tasks: [],
+            gameState: {
+                teamName: '',
+                captainName: '',
+                startTime: null,
+                currentTaskIndex: 0,
+                score: 0,
+                hintsUsed: 0,
+                gameData: null
+            }
+        };
+
+        // 🔧 ИНИЦИАЛИЗАЦИЯ СИСТЕМЫ
+        async function initializeFirebase() {
+            try {
+                if (!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.enabled) {
+                    console.log('🔥 Firebase не настроен, используем локальный режим');
+                    setSyncStatus('offline');
+                    return false;
+                }
+
+                console.log('🔥 Инициализация Firebase...');
+                
+                // Инициализируем Firebase
+                firebaseApp = firebase.initializeApp(window.FIREBASE_CONFIG);
+                firebaseDB = firebase.database();
+                
+                // Проверяем подключение
+                await firebaseDB.ref('.info/connected').once('value');
+                
+                firebaseConnected = true;
+                setSyncStatus('online');
+                
+                console.log('✅ Firebase подключен успешно!');
+                
+                // Загружаем конфигурацию игры из облака
+                await loadGameConfig();
+                
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Ошибка подключения Firebase:', error);
+                setSyncStatus('offline');
+                return false;
+            }
+        }
+
+        // 📥 ЗАГРУЗКА КОНФИГУРАЦИИ ИЗ ОБЛАКА
+        async function loadGameConfig() {
+            try {
+                const configSnapshot = await firebaseDB.ref('gameConfig/config').once('value');
+                const config = configSnapshot.val();
+                
+                if (config) {
+                    GAME_CONFIG.tasks = config.tasks || [];
+                    console.log('✅ Конфигурация загружена из облака');
+                } else {
+                    // Загружаем из локального файла как резерв
+                    console.log('📁 Загружаем конфигурацию из локального файла...');
+                    await loadLocalGameData();
+                }
+                
+                updateTaskDisplay();
+                
+            } catch (error) {
+                console.error('❌ Ошибка загрузки конфигурации:', error);
+                await loadLocalGameData();
+            }
+        }
+
+        // 📁 ЛОКАЛЬНАЯ ЗАГРУЗКА (резерв)
+        async function loadLocalGameData() {
+            try {
+                const response = await fetch('game-data.json');
+                const data = await response.json();
+                GAME_CONFIG.tasks = data.tasks || [];
+                console.log('✅ Локальная конфигурация загружена');
+            } catch (error) {
+                console.error('❌ Ошибка загрузки локальных данных:', error);
+                GAME_CONFIG.tasks = getDefaultTasks();
+            }
+        }
+
+        // 🎯 ЗАГРУЗКА ДАННЫХ ПО УМОЛЧАНИЮ
+        function getDefaultTasks() {
+            return [
+                {
+                    id: 1,
+                    title: "🎄 Снежинка",
+                    description: "Найдите красивую снежинку и введите код для разблокировки следующего задания.",
+                    code: "SNOWFLAKE",
+                    hint: "Снежинки любят холодные места"
+                },
+                {
+                    id: 2,
+                    title: "🎁 Подарочная коробка",
+                    description: "Найдите яркую подарочную коробку в помещении.",
+                    code: "PRESENT",
+                    hint: "Подарки обычно стоят под елкой"
+                },
+                {
+                    id: 3,
+                    title: "🔔 Рождественский колокольчик",
+                    description: "Найдите звенящий рождественский колокольчик.",
+                    code: "BELL",
+                    hint: "Звенит в ветреную погоду"
+                },
+                {
+                    id: 4,
+                    title: "⭐ Рождественская звезда",
+                    description: "Найдите блестящую рождественскую звезду на вершине.",
+                    code: "STAR",
+                    hint: "Светит в темноте и ведет путь"
+                },
+                {
+                    id: 5,
+                    title: "🎅 Санта Клаус",
+                    description: "Найдите Санта Клауса или его символ на помещении.",
+                    code: "SANTA",
+                    hint: "Приносит подарки хорошим детям"
+                }
+            ];
+        }
+
+        // 🔄 УПРАВЛЕНИЕ СТАТУСОМ СИНХРОНИЗАЦИИ
+        function setSyncStatus(status) {
+            const indicator = document.getElementById('syncIndicator');
+            if (!indicator) return;
+            
+            indicator.className = 'sync-indicator';
+            indicator.classList.add(status);
+            
+            const statusTexts = {
+                online: '🟢 Облако подключено',
+                offline: '🔴 Локальный режим',
+                syncing: '🟡 Синхронизация...'
+            };
+            
+            indicator.setAttribute('data-status', statusTexts[status] || status);
+        }
+
+        // 🎮 ЗАПУСК ИГРЫ
+        function startGame() {
+            const teamName = document.getElementById('teamName').value.trim();
+            const captainName = document.getElementById('captainName').value.trim();
+            
+            if (!teamName || !captainName) {
+                alert('❌ Пожалуйста, введите название команды и имя капитана!');
+                return;
+            }
+            
+            GAME_CONFIG.gameState.teamName = teamName;
+            GAME_CONFIG.gameState.captainName = captainName;
+            GAME_CONFIG.gameState.startTime = Date.now();
+            
+            // Сохраняем в локальное хранилище
+            localStorage.setItem('gameState', JSON.stringify(GAME_CONFIG.gameState));
+            
+            // Показываем игровой экран
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            
+            // Обновляем отображение
+            document.getElementById('currentTeamName').textContent = teamName;
+            document.getElementById('currentCaptainName').textContent = captainName;
+            
+            // Создаем и показываем первое задание
+            renderCurrentTask();
+            
+            // Запускаем таймер
+            startTimer();
+            
+            console.log('🎮 Игра началась:', teamName);
+        }
+
+        // 📝 ОТОБРАЖЕНИЕ ТЕКУЩЕГО ЗАДАНИЯ
+        function renderCurrentTask() {
+            const currentIndex = GAME_CONFIG.gameState.currentTaskIndex;
+            const task = GAME_CONFIG.tasks[currentIndex];
+            const container = document.getElementById('taskContainer');
+            
+            if (!task) {
+                endGame();
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="task-card">
+                    <h3>Задание ${currentIndex + 1}: ${task.title}</h3>
+                    <div class="task-description">${task.description}</div>
+                    
+                    <div class="task-code">
+                        <input type="text" id="taskInput" placeholder="Введите код" maxlength="20" onkeyup="checkCode(event)">
+                    </div>
+                    
+                    <button class="hint-btn" onclick="showHint()">💡 Подсказка</button>
+                    
+                    <div id="hintSection" class="hint-section" style="display: none;">
+                        <h4>💡 Подсказка:</h4>
+                        <p>${task.hint}</p>
+                    </div>
+                </div>
+            `;
+            
+            // Фокус на поле ввода
+            setTimeout(() => {
+                document.getElementById('taskInput').focus();
+            }, 100);
+        }
+
+        // 🔍 ПРОВЕРКА КОДА
+        function checkCode(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('taskInput');
+                const currentIndex = GAME_CONFIG.gameState.currentTaskIndex;
+                const task = GAME_CONFIG.tasks[currentIndex];
+                
+                if (!task) return;
+                
+                const userCode = input.value.trim().toUpperCase();
+                const correctCode = task.code.toUpperCase();
+                
+                if (userCode === correctCode) {
+                    // Правильный ответ!
+                    GAME_CONFIG.gameState.score += 100;
+                    GAME_CONFIG.gameState.currentTaskIndex++;
+                    
+                    // Обновляем отображение
+                    updateTaskDisplay();
+                    updateScoreDisplay();
+                    
+                    // Сохраняем результат в облако
+                    saveResultToFirebase();
+                    
+                    // Показываем следующее задание или завершаем игру
+                    setTimeout(() => {
+                        renderCurrentTask();
+                    }, 1000);
+                    
+                } else if (userCode.length === correctCode.length) {
+                    // Код введен полностью, но неверный
+                    input.style.borderColor = '#f44336';
+                    setTimeout(() => {
+                        input.style.borderColor = '#ddd';
+                    }, 2000);
+                }
+            }
+        }
+
+        // 💡 ПОКАЗ ПОДСКАЗКИ
+        function showHint() {
+            const hintSection = document.getElementById('hintSection');
+            if (hintSection) {
+                hintSection.style.display = hintSection.style.display === 'none' ? 'block' : 'none';
+                GAME_CONFIG.gameState.hintsUsed++;
+                updateTaskDisplay();
+            }
+        }
+
+        // 📊 ОБНОВЛЕНИЕ ОТОБРАЖЕНИЯ
+        function updateTaskDisplay() {
+            const taskDisplay = document.getElementById('tasksDisplay');
+            if (!taskDisplay) return;
+            
+            const current = GAME_CONFIG.gameState.currentTaskIndex + 1;
+            const total = GAME_CONFIG.tasks.length;
+            taskDisplay.textContent = `${current}/${total}`;
+        }
+
+        function updateScoreDisplay() {
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            if (!scoreDisplay) return;
+            
+            scoreDisplay.textContent = GAME_CONFIG.gameState.score;
+        }
+
+        // ⏱️ ТАЙМЕР
+        function startTimer() {
+            setInterval(() => {
+                const timerDisplay = document.getElementById('timerDisplay');
+                if (!timerDisplay) return;
+                
+                const elapsed = Math.floor((Date.now() - GAME_CONFIG.gameState.startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                timerDisplay.textContent = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // 🏁 ЗАВЕРШЕНИЕ ИГРЫ
+        function endGame() {
+            const totalTime = Math.floor((Date.now() - GAME_CONFIG.gameState.startTime) / 1000);
+            const finalScore = GAME_CONFIG.gameState.score;
+            
+            // Сохраняем финальный результат
+            saveFinalResultToFirebase();
+            
+            alert(`🎉 Игра завершена!\n\nКоманда: ${GAME_CONFIG.gameState.teamName}\nИтоговые очки: ${finalScore}\nВремя: ${Math.floor(totalTime / 60)}:${String(totalTime % 60).padStart(2, '0')}`);
+            
+            // Переходим к рейтингу
+            showLeaderboard();
+        }
+
+        // 📤 СОХРАНЕНИЕ РЕЗУЛЬТАТА В ОБЛАКО
+        async function saveResultToFirebase() {
+            if (!firebaseConnected) return;
+            
+            try {
+                setSyncStatus('syncing');
+                
+                const result = {
+                    teamName: GAME_CONFIG.gameState.teamName,
+                    captainName: GAME_CONFIG.gameState.captainName,
+                    score: GAME_CONFIG.gameState.score,
+                    currentTask: GAME_CONFIG.gameState.currentTaskIndex + 1,
+                    timestamp: Date.now(),
+                    date: new Date().toLocaleString('ru-RU')
+                };
+                
+                // Сохраняем в Firebase
+                await firebaseDB.ref(`teams/${GAME_CONFIG.gameState.teamName}`).set(result);
+                
+                setSyncStatus('online');
+                console.log('✅ Результат сохранен в облако');
+                
+            } catch (error) {
+                console.error('❌ Ошибка сохранения результата:', error);
+                setSyncStatus('offline');
+            }
+        }
+
+        // 📤 СОХРАНЕНИЕ ФИНАЛЬНОГО РЕЗУЛЬТАТА
+        async function saveFinalResultToFirebase() {
+            if (!firebaseConnected) return;
+            
+            try {
+                const totalTime = Math.floor((Date.now() - GAME_CONFIG.gameState.startTime) / 1000);
+                const result = {
+                    teamName: GAME_CONFIG.gameState.teamName,
+                    captainName: GAME_CONFIG.gameState.captainName,
+                    score: GAME_CONFIG.gameState.score,
+                    hintsUsed: GAME_CONFIG.gameState.hintsUsed,
+                    totalTime: totalTime,
+                    currentTask: GAME_CONFIG.gameState.currentTaskIndex,
+                    completed: true,
+                    timestamp: Date.now(),
+                    date: new Date().toLocaleString('ru-RU')
+                };
+                
+                await firebaseDB.ref(`teams/${GAME_CONFIG.gameState.teamName}`).update(result);
+                console.log('✅ Финальный результат сохранен');
+                
+            } catch (error) {
+                console.error('❌ Ошибка сохранения финального результата:', error);
+            }
+        }
+
+        // 🏆 ПОКАЗ РЕЙТИНГА
+        async function showLeaderboard() {
+            const modal = document.getElementById('leaderboardModal');
+            const list = document.getElementById('leaderboardList');
+            
+            modal.style.display = 'flex';
+            list.innerHTML = '🔄 Загрузка рейтинга...';
+            
+            try {
+                let teamsData = [];
+                
+                if (firebaseConnected) {
+                    // Загружаем из Firebase
+                    const snapshot = await firebaseDB.ref('teams').orderByChild('score').once('value');
+                    snapshot.forEach(child => {
+                        teamsData.push(child.val());
+                    });
+                    
+                    // Сортируем по очкам (по убыванию)
+                    teamsData.sort((a, b) => b.score - a.score);
+                } else {
+                    // Локальный режим - показываем только текущую команду
+                    teamsData = [GAME_CONFIG.gameState];
+                }
+                
+                // Рендерим список
+                let html = '';
+                teamsData.forEach((team, index) => {
+                    const isCurrent = team.teamName === GAME_CONFIG.gameState.teamName;
+                    const rank = index + 1;
+                    
+                    html += `
+                        <div class="leaderboard-item ${isCurrent ? 'current-team' : ''}">
+                            <span class="rank">${rank}.</span>
+                            <span class="team-name">${team.teamName}</span>
+                            <span class="score">${team.score} очков</span>
+                        </div>
+                    `;
+                });
+                
+                list.innerHTML = html || '<p style="text-align: center; color: #666;">Пока нет результатов</p>';
+                
+            } catch (error) {
+                console.error('❌ Ошибка загрузки рейтинга:', error);
+                list.innerHTML = '<p style="text-align: center; color: #f44336;">Ошибка загрузки рейтинга</p>';
+            }
+        }
+
+        // ❌ СКРЫТИЕ РЕЙТИНГА
+        function hideLeaderboard() {
+            document.getElementById('leaderboardModal').style.display = 'none';
+        }
+
+        // ❄️ СОЗДАНИЕ СНЕЖИНОК
+        function createSnowflake() {
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            snowflake.innerHTML = '❄';
+            snowflake.style.left = Math.random() * 100 + 'vw';
+            snowflake.style.animationDuration = Math.random() * 3 + 2 + 's';
+            snowflake.style.opacity = Math.random();
+            snowflake.style.fontSize = Math.random() * 20 + 10 + 'px';
+            
+            document.body.appendChild(snowflake);
+            
+            setTimeout(() => {
+                snowflake.remove();
+            }, 5000);
+        }
+
+        // 🚀 ЗАГРУЗКА СТРАНИЦЫ
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🎄 Загрузка игры...');
+            
+            // Восстанавливаем состояние игры если есть
+            const savedState = localStorage.getItem('gameState');
+            if (savedState) {
+                try {
+                    const state = JSON.parse(savedState);
+                    if (confirm('🔄 Обнаружена незавершенная игра. Продолжить?')) {
+                        GAME_CONFIG.gameState = { ...GAME_CONFIG.gameState, ...state };
+                        
+                        document.getElementById('loginPage').style.display = 'none';
+                        document.getElementById('gameScreen').style.display = 'block';
+                        
+                        document.getElementById('currentTeamName').textContent = state.teamName;
+                        document.getElementById('currentCaptainName').textContent = state.captainName;
+                        
+                        renderCurrentTask();
+                        startTimer();
+                    } else {
+                        localStorage.removeItem('gameState');
+                    }
+                } catch (error) {
+                    console.error('❌ Ошибка восстановления состояния:', error);
+                }
+            }
+            
+            // Инициализируем Firebase
+            await initializeFirebase();
+            
+            // Запускаем создание снежинок
+            setInterval(createSnowflake, 300);
+            
+            console.log('✅ Игра готова к запуску!');
+        });
+
+        // ⌨️ ГОРЯЧИЕ КЛАВИШИ
+        document.addEventListener('keydown', function(event) {
+            // ESC - закрыть рейтинг
+            if (event.key === 'Escape') {
+                hideLeaderboard();
+            }
+        });
+    </script>
+</body>
+</html>
