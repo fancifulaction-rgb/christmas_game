@@ -23,7 +23,20 @@ const ADMIN_SECRET = "2026";
             box-sizing: border-box;
         }
 
-        body {
+        body 
+        <script>
+// Проверка доступа
+if (!localStorage.getItem('admin_access')) {
+    const inputCode = prompt('Введите код доступа администратора:');
+    if (inputCode !== ADMIN_SECRET) {
+        alert('Неверный код доступа!');
+        window.location.href = 'index.html';
+    } else {
+        localStorage.setItem('admin_access', 'granted');
+    }
+}
+</script>
+        {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
