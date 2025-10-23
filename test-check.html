@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Проверка системы v5.3</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .test-result { 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+        }
+        .pass { 
+            background: #d4edda; 
+            border: 1px solid #c3e6cb; 
+            color: #155724; 
+        }
+        .fail { 
+            background: #f8d7da; 
+            border: 1px solid #f5c6cb; 
+            color: #721c24; 
+        }
+        .warning { 
+            background: #fff3cd; 
+            border: 1px solid #ffeaa7; 
+            color: #856404; 
+        }
+        .test-button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        .test-button:hover { 
+            background: #0056b3; 
+        }
+        pre { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 5px; 
+            overflow: auto; 
+            font-size: 12px; 
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Тестирование системы Новогодней охоты за сокровищами v5.3</h1>
+    
+    <div id="test-results"></div>
+    
+    <div style="margin: 20px 0;">
+        <button class="test-button" onclick="runAllTests()">🚀 Запустить все тесты</button>
+        <button class="test-button" onclick="clearResults()">🗑️ Очистить результаты</button>
+    </div>
+
+    <h2>📋 Результаты тестов:</h2>
+    <div id="results-log"></div>
+
+    <script>
+        function addTestResult(testName, passed, message, details = '') {
+            const results = document.getElementById('results-log');
+            const className = passed ? 'pass' : 'fail';
+            const icon = passed ? '✅' : '❌';
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${className}`;
+            resultDiv.innerHTML = `
+                <h3>${icon} ${testName}</h3>
+                <p>${message}</p>
+                ${details ? `<pre>${details}</pre>` : ''}
+            `;
+            
+            results.appendChild(resultDiv);
+        }
+
+        function clearResults() {
+            document.getElementById('results-log').innerHTML = '';
+        }
+
+        function runAllTests() {
+            clearResults();
+            
+            // Тест 1: Проверка наличия файлов
+            console.log('🔍 Запуск теста 1: Проверка файлов...');
+            checkFiles();
+            
+            // Тест 2: Проверка Firebase конфигурации
+            console.log('🔍 Запуск теста 2: Firebase конфигурация...');
+            setTimeout(checkFirebase, 1000);
+            
+            // Тест 3: Проверка JSON структуры
+            console.log('🔍 Запуск теста 3: JSON структура...');
+            setTimeout(checkJSON, 2000);
+            
+            // Тест 4: Проверка JavaScript ошибок
+            console.log('🔍 Запуск теста 4: JavaScript ошибки...');
+            setTimeout(checkJS, 3000);
+        }
+
+        function checkFiles() {
+            const requiredFiles = [
+                'index.html',
+                'admin.html', 
+                'firebase-config.js',
+                'game-data.json'
+            ];
+
+            let allFilesExist = true;
+            let fileList = '';
+
+            requiredFiles.forEach(file => {
+                fetch(file)
+                    .then(response => {
+                        if (response.ok) {
+                            fileList += `✅ ${file} - найден\n`;
+                        } else {
+                            fileList += `❌ ${file} - НЕ НАЙДЕН (${response.status})\n`;
+                            allFilesExist = false;
+                        }
+                    })
+                    .catch(error => {
+                        fileList += `❌ ${file} - ОШИБКА: ${error.message}\n`;
+                        allFilesExist = false;
+                    });
+            });
+
+            setTimeout(() => {
+                addTestResult(
+                    'Проверка файлов системы',
+                    allFilesExist,
+                    allFilesExist ? 'Все необходимые файлы присутствуют' : 'Найдены проблемы с файлами',
+                    fileList
+                );
+            }, 500);
+        }
+
+        function checkFirebase() {
+            fetch('firebase-config.js')
+                .then(response => response.text())
+                .then(content => {
+                    const hasApiKey = content.includes('AIzaSyDVAchLp0xaAqF79A3R36EhrcN_nKDTdyg');
+                    const hasAccessCode = content.includes('ChristmasGame2025!');
+                    const hasEnabled = content.includes('enabled: true');
+                    
+                    const checks = [
+                        { name: 'API ключ', pass: hasApiKey },
+                        { name: 'Код доступа', pass: hasAccessCode },
+                        { name: 'Включен режим', pass: hasEnabled }
+                    ];
+                    
+                    const allPass = checks.every(check => check.pass);
+                    const details = checks.map(check => 
+                        `${check.pass ? '✅' : '❌'} ${check.name}`
+                    ).join('\n');
+                    
+                    addTestResult(
+                        'Firebase конфигурация',
+                        allPass,
+                        allPass ? 'Firebase правильно настроен' : 'Проблемы с настройкой Firebase',
+                        details
+                    );
+                })
+                .catch(error => {
+                    addTestResult(
+                        'Firebase конфигурация',
+                        false,
+                        'Ошибка чтения конфигурации',
+                        error.message
+                    );
+                });
+        }
+
+        function checkJSON() {
+            fetch('game-data.json')
+                .then(response => response.json())
+                .then(data => {
+                    const checks = [
+                        { name: 'Структура game', pass: data.game && data.game.title },
+                        { name: 'Задания', pass: Array.isArray(data.tasks) && data.tasks.length > 0 },
+                        { name: 'Версия 5.3', pass: data.game && data.game.version === '5.3' },
+                        { name: '5 заданий', pass: data.tasks && data.tasks.length === 5 }
+                    ];
+                    
+                    const allPass = checks.every(check => check.pass);
+                    const details = checks.map(check => 
+                        `${check.pass ? '✅' : '❌'} ${check.name}`
+                    ).join('\n');
+                    
+                    addTestResult(
+                        'JSON структура данных',
+                        allPass,
+                        allPass ? 'JSON корректно структурирован' : 'Проблемы с JSON структурой',
+                        details
+                    );
+                })
+                .catch(error => {
+                    addTestResult(
+                        'JSON структура данных',
+                        false,
+                        'Ошибка загрузки/парсинга JSON',
+                        error.message
+                    );
+                });
+        }
+
+        function checkJS() {
+            // Проверяем основные JavaScript ошибки в index.html
+            fetch('index.html')
+                .then(response => response.text())
+                .then(content => {
+                    const issues = [];
+                    
+                    // Проверяем критические функции
+                    if (!content.includes('function showHint()')) {
+                        issues.push('❌ Функция showHint не найдена');
+                    }
+                    
+                    if (!content.includes('showAlert(')) {
+                        issues.push('❌ Функция showAlert не найдена');
+                    }
+                    
+                    if (!content.includes('updateProgress()')) {
+                        issues.push('❌ Функция updateProgress не найдена');
+                    }
+                    
+                    if (content.includes('GAME_CONFIG.gameState.score')) {
+                        issues.push('❌ Найдена неправильная переменная score');
+                    }
+                    
+                    const hasIssues = issues.length > 0;
+                    const details = hasIssues ? issues.join('\n') : '✅ Критические ошибки не найдены';
+                    
+                    addTestResult(
+                        'JavaScript проверка',
+                        !hasIssues,
+                        hasIssues ? 'Найдены проблемы в JavaScript' : 'JavaScript выглядит корректным',
+                        details
+                    );
+                })
+                .catch(error => {
+                    addTestResult(
+                        'JavaScript проверка',
+                        false,
+                        'Ошибка чтения index.html',
+                        error.message
+                    );
+                });
+        }
+
+        // Автоматический запуск тестов при загрузке
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>
